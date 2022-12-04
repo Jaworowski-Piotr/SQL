@@ -1,0 +1,185 @@
+Zaptania SQL dla różnych przypadków: 
+
+1. 
+	select * from customer 
+	where first_name ilike '_er%' and last_name ilike 'S%'
+
+	ODDAJE WSZYSTKIE PRZYPADKI GDZIE IMIE ZACZYNA SIE NA DOWOLNYM ZNAKIEM A NAZWISKO ZACZYNA SIĘ NA S 
+	ilike POZWALA NIE JEST CASESENSITIVE 
+
+2. 
+	select count(distinct(district)) from address;
+
+
+3. 
+	select count (*) from film
+	where rating = 'R'
+	and 
+	replacement_cost between 5 and 15
+
+4. 
+	select count(*) from film
+	where title ilike '%Truman%'
+
+5. 
+	-- select min(replacement_cost) from film
+	-- select max(replaceme nt_cost) from film 
+	 
+	-- select max(replacement_cost), min(replacement_cost) from film 
+	-- możemy to zrobić bo obydwie funkcje zwracają pojedyńczą wartość
+
+	-- select ROUND(AVG(replacement_cost), 4) from film 
+
+	-- select SUM(replacement_cost) from film 
+
+6. 
+	select customer_id, SUM(amount) from payment
+	group by customer_id
+	order by SUM(amount) DESC
+	
+	Zwraca tabele przedstawiającą ile wydała osoba o danym id (w tabeli ogólnej 
+		znajduje sie wiele recordow z tym samym customer_id)
+
+7. 
+	select customer_id, staff_id, SUM(amount) from payment 
+	group by staff_id, customer_id 
+	order by SUM(amount) DESC
+	-- order by customer_id
+		
+	Zwraca tabele zawierającą cust_id i staff_id oraz aggregacje danych polegającą na 
+		suowaniu wszystkich tranzakcji dla danego cust_id oraz dla danego staff_id
+
+8.	select DATE(payment_date), sum(amount) from payment
+	group by Date(payment_date)
+	order by SUM(amount)
+	
+	Zwraca tabele przedstawiającą payment_date [jako date] oraz sume tranzakcji w dniu
+		pogrupowaną w odniesieniu do danego dnia (w dniu mogło być wiele tranzakcji)
+
+9. 
+	select customer_id, sum(amount) from payment
+	group by customer_id
+	order by sum(amount) DESC
+	limit 5
+
+	Zwraca 5 najlepszych klijentów 
+
+10. 
+	select customer_id, sum(amount) from payment
+	where customer_id not in (184, 87, 477)
+	group by customer_id
+	having sum(amount)>100
+	 
+	Pozwala na zwrócenie tabeli z przeprowadzoną validacją danych po agregacji 
+
+11. 
+	select store_id, count(customer_id)  from customer
+	group by store_id 
+	having count(customer_id) > 300
+
+	Pozwala na selekcje po agregacji  
+
+12. 
+	-- select customer_id, Count(customer_id) 
+		-- from payment
+		-- group by customer_id
+		-- having Count(customer_id) >= 40
+
+	select customer_id, staff_id, SUM(amount) from payment
+		where staff_id = 2	
+		group by customer_id, staff_id 
+		having SUM(amount) > 100
+
+-----------------------------------------------------------------------------------------
+
+1. 	SELECT customer_id, sum(amount) AS total_spend   #alias jest przypisywany na sam koniec
+	from payment
+	group by customer_id
+
+	Poprawne użycie "as" zaraz po wywołaniu (kolumny lub funkcji)  
+2.
+	select payment_id, payment.customer_id,  first_name from payment 
+		inner join customer 
+		on payment.customer_id = customer.customer_id
+	
+	Oddaje elementy wspólne 
+
+3.
+	select * from customer
+	full outer join payment 
+	on customer.customer_id = payment.customer_id
+	where customer.customer_id is null
+	or payment.payment_id is null 
+
+	Zwróć elementy różne dla obydwu tabel 
+
+
+4. 
+	select film.film_id, title, inventory_id, store_id
+	from film 
+	left outer join inventory on 
+	inventory.film_id = film.film_id
+	where inventory.film_id is null
+
+	Zwróci wszystkie filmy których nie ma na stanie. 
+
+5. 
+
+	select district, email from address
+	inner join customer on 
+	address.address_id = customer.address_id
+	where district = 'California'
+
+---------------------------------------------------------------------------------------
+
+1. 
+	select extract(year from payment_date) as  my_year
+	from payment	 
+	
+	Pozwala na wyodrębnienie roku z daty w tabeli payment 
+
+	AGE - pozwala określić jak stary jest rekord 
+	TO_CHAR -> dokumentacja 
+
+2. 
+	select count(*) from payment
+	where extract(dow from payment_date) = 1
+
+	dow -- > 
+
+
+3. 
+	select round(rental_rate/replacement_cost,2)*10 0 as percent_cost
+	from film
+
+	Sposób na funkcje matematyczne w sql
+
+------------------------------------------------------------------------------------
+1.
+	SUBQUERY
+
+	select title, rental_rate 
+	from film 
+	where rental_rate > (select AVG(rental_rate) from film )
+	
+	Pobier wszystkie rekordy z bazy gdzie rental_rate jest wieksze od avg
+
+	select film_id , title from film 
+	where film_id in
+		(select inventory.film_id from rental 
+		inner join inventory on 
+		inventory.inventory_id = rental.inventory_id
+		where return_date between '2005-05-29' and '2005-05-30')
+			order by title
+
+	select first_name, last_name 	
+	from customer as c
+	where exists 
+		(select * from payment as p
+		where p.customer_id = c.customer_id
+		and amount > 11)
+
+----------------------------------------------------------------------------------------
+			Creating database and tables
+1.
+	
