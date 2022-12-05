@@ -182,4 +182,64 @@ Zaptania SQL dla różnych przypadków:
 ----------------------------------------------------------------------------------------
 			Creating database and tables
 1.
+	create table account (
+	player_id serial primary key,
+	username varchar(50) unique not null, 
+	password varchar(50) not null,
+	email varchar(250) unique not null,
+	created_on timestamp not null,
+	last_login timestamp 
+	)
+
+	Tworzenie tabeli 
+
+2. 
+	create table account_job (
+	user_id INTEGER references account(player_id),
+	job_id INTEGER references  job(job_id),
+	hire_date TIMESTAMP
+	)
+	
+	Tworzenie tabeli łączącej (relacja)
+ 
+3. 
+	insert into account(username, password, email, created_on)
+	values
+	('Peter', 'password', 'jose@mail.com', CURRENT_TIMESTAMP)  
+
+	insert into account_job(user_id, job_id, hire_date)
+	values
+	(1, 1, CURRENT_TIMESTAMP)   
+
+4.
+	update account_job 
+	set hire_date = account.created_on
+	from account 
+	where account_job.user_id = account.player_id
+
+5. 
+	update account
+	set last_login = current_timestamp 
+	returning email, last_login, created_on
+
+6. 
+
+	delete from job
+	where job_name = 'Cowboy'
+	returning job_id, job_name
+
+7. 
+
+	create table employees (
+	emp_id serial primary key,
+	first_name Varchar(50) not null,
+	last_name varchar(50) not null, 
+	birthdate DATE CHECK (birthdate > '1900-01-01'),
+	hire_date DATE CHECK (hire_date > birthdate),
+	salary INTEGER check (salary > 0)
+	)
+
+-------------------------------------------------------------------------------------
+
+1. 
 	
